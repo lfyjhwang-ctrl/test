@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>주방 타이머</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #e8e2d5, #d9d0bd);
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .card {
+    background: #f6f1e7;
+    border-radius: 26px;
+    padding: 36px 40px 44px;
+    width: 380px;
+    box-shadow:
+      0 18px 40px rgba(60, 40, 20, 0.25),
+      inset 0 0 0 6px #fffdf8,
+      inset 0 0 0 9px #cbb994;
+    text-align: center;
+    position: relative;
+    transition: box-shadow 0.3s ease;
+  }
+  .card::before {
+    content: '⏲';
+    display: block;
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+  }
+  .brand {
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    color: #a8762f;
+    font-weight: 700;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+  }
+  .screen {
+    background: #2b2b28;
+    border-radius: 14px;
+    padding: 22px 10px;
+    margin-bottom: 24px;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.5);
+    transition: background 0.15s ease;
+  }
+  .screen.alarming {
+    animation: flash 0.5s step-start infinite;
+  }
+  @keyframes flash {
+    50% { background: #7a1f1f; }
+  }
+  .time {
+    font-family: 'Consolas', monospace;
+    font-size: 3.4rem;
+    color: #ffb347;
+    letter-spacing: 3px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 8px rgba(255, 179, 71, 0.5);
+  }
+  .screen.alarming .time { color: #ffdede; text-shadow: 0 0 10px rgba(255,80,80,0.8); }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .presets button {
+    border: none;
+    outline: none;
+    padding: 12px 0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #4a3b23;
+    cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #fffaf0, #e4d9bf 70%, #c9b98e 100%);
+    box-shadow: 0 4px 0 #a99461, 0 6px 10px rgba(0,0,0,0.25);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .presets button:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #a99461, 0 2px 4px rgba(0,0,0,0.25);
+  }
+
+  .adjust {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 26px;
+  }
+  .adjust button {
+    border: none;
+    outline: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #3c4a4a;
+    cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #f2f6f6, #d3dede 70%, #b7c4c4 100%);
+    box-shadow: 0 4px 0 #8fa0a0, 0 6px 10px rgba(0,0,0,0.2);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .adjust button:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #8fa0a0, 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+  }
+  .buttons button {
+    border: none;
+    outline: none;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: #4a3b23;
+    background: radial-gradient(circle at 35% 30%, #fffaf0, #e4d9bf 70%, #c9b98e 100%);
+    box-shadow: 0 6px 0 #a99461, 0 8px 14px rgba(0,0,0,0.3);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .buttons button:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #a99461, 0 3px 6px rgba(0,0,0,0.3);
+  }
+  #startStop { color: #1b5e20; background: radial-gradient(circle at 35% 30%, #d4f7d4, #8fd98f 70%, #5cb85c 100%); box-shadow: 0 6px 0 #3d8b3d, 0 8px 14px rgba(0,0,0,0.3); }
+  #startStop.running { color: #7f0000; background: radial-gradient(circle at 35% 30%, #ffd9d9, #f19999 70%, #e05555 100%); box-shadow: 0 6px 0 #a83a3a, 0 8px 14px rgba(0,0,0,0.3); }
+  #startStop.running:active { box-shadow: 0 2px 0 #a83a3a, 0 3px 6px rgba(0,0,0,0.3); }
+  #startStop:active { box-shadow: 0 2px 0 #3d8b3d, 0 3px 6px rgba(0,0,0,0.3); }
+
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .locked button:not(#startStop):not(#reset) { opacity: 0.4; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="brand">KITCHEN TIMER</div>
+    <div class="screen" id="screen">
+      <div class="time" id="display">00:00</div>
+    </div>
+    <div class="presets">
+      <button class="preset" data-min="1">1분</button>
+      <button class="preset" data-min="3">3분</button>
+      <button class="preset" data-min="5">5분</button>
+      <button class="preset" data-min="10">10분</button>
+      <button class="preset" data-min="15">15분</button>
+      <button class="preset" data-min="20">20분</button>
+    </div>
+    <div class="adjust">
+      <button id="minus10">-10초</button>
+      <button id="plus10">+10초</button>
+    </div>
+    <div class="buttons">
+      <button id="startStop">시작</button>
+      <button id="reset">리셋</button>
+    </div>
+  </div>
+
+<script>
+  const card = document.getElementById('card');
+  const screenEl = document.getElementById('screen');
+  const display = document.getElementById('display');
+  const startStopBtn = document.getElementById('startStop');
+  const resetBtn = document.getElementById('reset');
+  const plus10Btn = document.getElementById('plus10');
+  const minus10Btn = document.getElementById('minus10');
+  const presetButtons = document.querySelectorAll('.preset');
+
+  let remainingMs = 0;
+  let endTimestamp = 0;
+  let running = false;
+  let timerId = null;
+
+  let alarming = false;
+  let alarmSoundInterval = null;
+  let alarmBlinkInterval = null;
+  let audioCtx = null;
+
+  function format(ms) {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(m)}:${pad(s)}`;
+  }
+
+  function render() {
+    display.textContent = format(remainingMs);
+  }
+
+  function setLocked(locked) {
+    card.classList.toggle('locked', locked);
+  }
+
+  function beep() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 880;
+    gain.gain.value = 0.15;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.15);
+  }
+
+  function startAlarm() {
+    alarming = true;
+    screenEl.classList.add('alarming');
+    beep();
+    alarmSoundInterval = setInterval(beep, 500);
+    let toggle = false;
+    alarmBlinkInterval = setInterval(() => {
+      display.textContent = toggle ? format(0) : '완료!';
+      toggle = !toggle;
+    }, 500);
+    startStopBtn.textContent = '정지';
+    startStopBtn.classList.add('running');
+  }
+
+  function stopAlarm() {
+    alarming = false;
+    screenEl.classList.remove('alarming');
+    clearInterval(alarmSoundInterval);
+    clearInterval(alarmBlinkInterval);
+    render();
+    startStopBtn.textContent = '시작';
+    startStopBtn.classList.remove('running');
+  }
+
+  function tick() {
+    remainingMs = endTimestamp - Date.now();
+    if (remainingMs <= 0) {
+      remainingMs = 0;
+      clearInterval(timerId);
+      running = false;
+      startAlarm();
+      return;
+    }
+    render();
+  }
+
+  startStopBtn.addEventListener('click', () => {
+    if (alarming) {
+      stopAlarm();
+      remainingMs = 0;
+      setLocked(false);
+      return;
+    }
+    if (!running) {
+      if (remainingMs <= 0) return;
+      running = true;
+      endTimestamp = Date.now() + remainingMs;
+      timerId = setInterval(tick, 200);
+      startStopBtn.textContent = '정지';
+      startStopBtn.classList.add('running');
+      setLocked(true);
+    } else {
+      running = false;
+      clearInterval(timerId);
+      startStopBtn.textContent = '시작';
+      startStopBtn.classList.remove('running');
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    running = false;
+    clearInterval(timerId);
+    if (alarming) stopAlarm();
+    remainingMs = 0;
+    render();
+    startStopBtn.textContent = '시작';
+    startStopBtn.classList.remove('running');
+    setLocked(false);
+  });
+
+  presetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (running || alarming) return;
+      remainingMs += Number(btn.dataset.min) * 60000;
+      render();
+    });
+  });
+
+  plus10Btn.addEventListener('click', () => {
+    if (running || alarming) return;
+    remainingMs += 10000;
+    render();
+  });
+
+  minus10Btn.addEventListener('click', () => {
+    if (running || alarming) return;
+    remainingMs = Math.max(0, remainingMs - 10000);
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
